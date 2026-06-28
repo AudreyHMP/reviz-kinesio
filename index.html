@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="fr" data-app-version="1.3.2">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réviz' Kinésio — A1 + A2</title>
+<style>
+  :root{
+    --bg:#f4f3fb; --card:#ffffff; --ink:#2b2a3d; --muted:#6b6982;
+    --blue:#5b7cda; --blue-d:#3f5bb3; --violet:#8a6fd1; --violet-d:#6f54b8;
+    --green:#3fae7a; --green-bg:#e6f6ee; --red:#d0586b; --red-bg:#fbe9ed;
+    --line:#e7e5f2; --shadow:0 6px 24px rgba(80,70,140,.10);
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:linear-gradient(160deg,#f4f3fb,#eef0fb);color:var(--ink);
+    line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 16px 60px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 18px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.25rem}
+  .logo{width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--blue),var(--violet));flex:0 0 auto}
+  .who{font-size:.85rem;color:var(--muted)}
+  .who b{color:var(--violet-d)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:22px;margin-bottom:16px}
+  h1,h2,h3{margin:0 0 12px;line-height:1.25}
+  h1{font-size:1.5rem} h2{font-size:1.2rem;color:var(--violet-d)} h3{font-size:1rem}
+  p.lead{color:var(--muted);margin-top:0}
+  label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 6px}
+  input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;
+    font-size:1rem;font-family:inherit;background:#fbfbff;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--blue);border-color:var(--blue)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border:none;border-radius:12px;padding:13px 18px;font-size:1rem;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:transform .05s,filter .15s;width:100%}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff}
+  .btn.primary:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#f0eefb;color:var(--violet-d)}
+  .btn.soft{background:#eef2fc;color:var(--blue-d)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:140px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.02em;
+    padding:4px 10px;border-radius:999px;background:#eef0fb;color:var(--blue-d);text-transform:uppercase}
+  .pill.verify-ok{background:#e6f6ee;color:#2d7a52;text-transform:none}
+  .pill.verify-warn{background:#fff4e0;color:#9a6b00;text-transform:none}
+  .muted{color:var(--muted);font-size:.88rem}
+  .hidden{display:none!important}
+  /* progress */
+  .progress{height:10px;background:#e9e7f6;border-radius:999px;overflow:hidden;margin:4px 0 2px}
+  .progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));
+    border-radius:999px;transition:width .3s}
+  .topline{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  /* options */
+  .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    border:1.5px solid var(--line);background:#fbfbff;border-radius:12px;padding:14px;
+    margin:8px 0;font-size:1rem;font-family:inherit;cursor:pointer;color:var(--ink);transition:.12s}
+  .opt:hover{border-color:var(--blue);background:#f3f6ff}
+  .opt .k{flex:0 0 28px;height:28px;border-radius:8px;background:#ece9f8;color:var(--violet-d);
+    font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+  .opt.good{border-color:var(--green);background:var(--green-bg)}
+  .opt.bad{border-color:var(--red);background:var(--red-bg)}
+  .opt.good .k{background:var(--green);color:#fff}
+  .opt.bad .k{background:var(--red);color:#fff}
+  .opt:disabled{cursor:default}
+  .feedback{border-radius:12px;padding:14px 16px;margin-top:8px;font-size:.95rem}
+  .feedback.ok{background:var(--green-bg);border:1px solid #bfe6d2}
+  .feedback.ko{background:var(--red-bg);border:1px solid #f0c6d0}
+  .feedback .src{display:block;margin-top:6px;font-size:.8rem;color:var(--muted)}
+  .assoc-row{display:flex;gap:10px;align-items:center;margin:8px 0}
+  .assoc-row .term{flex:1;font-weight:600;background:#f3f1fb;border-radius:10px;padding:10px 12px;font-size:.92rem}
+  .assoc-row select{flex:1.2}
+  /* chart */
+  .bar{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:.85rem}
+  .bar .lab{flex:0 0 42%;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar .track{flex:1;height:16px;background:#ece9f8;border-radius:999px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:999px}
+  .bar .pct{flex:0 0 42px;text-align:right;font-weight:700}
+  .scorebig{font-size:2.6rem;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+  .timer{font-weight:700;color:var(--violet-d)}
+  .timer.warn{color:var(--red)}
+  ul.hist{list-style:none;padding:0;margin:0}
+  ul.hist li{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+  ul.hist li:last-child{border-bottom:none}
+  .tag{font-size:.72rem;color:var(--muted)}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:24px}
+  .notice{background:#fff7e8;border:1px solid #f0dcae;border-radius:12px;padding:12px 14px;
+    font-size:.85rem;color:#7a5a1e;margin:6px 0 16px}
+  .notice b{color:#6b4d12}
+  #q-image:not(:empty){margin:4px 0 12px}
+  #q-image svg{max-width:200px;width:100%;height:auto;display:block;margin:0 auto}
+  .report-link{background:none;border:none;color:var(--red);font-weight:600;font-size:.82rem;
+    cursor:pointer;padding:6px 0;margin-top:6px;font-family:inherit;text-decoration:underline}
+  .modal{position:fixed;inset:0;background:rgba(40,35,70,.45);display:flex;align-items:center;
+    justify-content:center;padding:18px;z-index:50}
+  .modal .box{background:#fff;border-radius:16px;padding:20px;max-width:460px;width:100%;box-shadow:var(--shadow)}
+  .modal textarea{width:100%;min-height:150px;border:1px solid var(--line);border-radius:12px;
+    padding:12px;font-family:inherit;font-size:.9rem;resize:vertical;background:#fbfbff;color:var(--ink)}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr}.opt{padding:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand"><span class="logo"></span> Réviz' Kinésio</div>
+  </header>
+
+  <!-- ÉCRAN ACCUEIL -->
+  <section id="screen-home" class="card">
+    <h1>Que veux-tu réviser ?</h1>
+    <div class="notice" id="notice">
+      <b>⚠️ À lire :</b> la grande majorité des réponses sont justes, mais elles n'ont pas toutes été vérifiées une à une.
+      En cas de doute, vérifie la <b>source</b> indiquée sous chaque correction — et signale toute réponse qui te semble fausse.
+    </div>
+    <p class="lead" id="bank-info"></p>
+    <p class="muted hidden" id="version-warn" style="margin-top:0;font-size:.82rem;color:var(--red)"></p>
+
+    <label for="sel-banque">Version de la banque</label>
+    <select id="sel-banque"></select>
+
+    <label for="sel-theme">Thème</label>
+    <select id="sel-theme"></select>
+
+    <div class="grid2">
+      <div>
+        <label for="sel-nb">Nombre de questions</label>
+        <select id="sel-nb">
+          <option value="5">5 questions</option>
+          <option value="10" selected>10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="0">Toutes</option>
+        </select>
+      </div>
+      <div>
+        <label for="sel-type">Type</label>
+        <select id="sel-type">
+          <option value="all" selected>Tous les types</option>
+          <option value="qcm">QCM</option>
+          <option value="vrai_faux">Vrai / Faux</option>
+          <option value="association">Association</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn primary" id="btn-start" style="margin-top:18px">▶ Lancer le quiz</button>
+    <button class="btn ghost" id="btn-exam" style="margin-top:10px">⏱ Examen blanc (20 questions chronométrées)</button>
+
+    <div class="row" style="margin-top:18px">
+      <button class="btn soft" id="btn-stats">📊 Mes forces &amp; faiblesses</button>
+      <button class="btn soft" id="btn-hist">🕘 Historique</button>
+    </div>
+
+    <details style="margin-top:18px">
+      <summary class="muted" style="cursor:pointer">Gérer la banque de questions (import / export)</summary>
+      <div class="row" style="margin-top:10px">
+        <button class="btn soft" id="btn-export">⬇ Exporter le JSON</button>
+        <label class="btn soft" style="margin:0">⬆ Importer un JSON
+          <input id="file-import" type="file" accept=".json,application/json" class="hidden">
+        </label>
+      </div>
+      <p class="muted" id="import-msg" style="margin-bottom:0"></p>
+    </details>
+
+    <details style="margin-top:12px">
+      <summary class="muted" style="cursor:pointer">Mes scores &amp; historique (export / import)</summary>
+      <p class="muted" style="margin:10px 0 8px">Tes résultats restent sur ton ordi. Une <strong>sauvegarde auto</strong> garde les 5 dernières versions en local (léger, sans fichier).</p>
+      <p class="muted" id="autobackup-info" style="margin:0 0 8px"></p>
+      <button type="button" class="btn ghost" id="btn-restore-autobackup" style="width:auto;padding:8px 14px;font-size:.85rem;margin:0 0 10px">↩ Restaurer la dernière sauvegarde auto</button>
+      <div class="row" style="margin-top:10px">
+        <button class="btn soft" id="btn-export-scores">⬇ Exporter mes scores</button>
+        <label class="btn soft" style="margin:0">⬆ Importer des scores
+          <input id="file-import-scores" type="file" accept=".json,application/json" class="hidden">
+        </label>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:10px">
+        <input type="checkbox" id="scores-import-replace" style="width:auto">
+        Remplacer mes scores (sinon fusion avec l'existant)
+      </label>
+      <p class="muted" id="scores-import-msg" style="margin-bottom:0"></p>
+    </details>
+  </section>
+
+  <!-- ÉCRAN QUIZ -->
+  <section id="screen-quiz" class="card hidden">
+    <div class="topline">
+      <span id="q-counter"></span>
+      <span id="q-mode"></span>
+      <span class="timer hidden" id="q-timer"></span>
+    </div>
+    <div class="topline" style="margin-top:6px">
+      <button type="button" class="btn ghost" id="btn-quit-quiz" style="width:auto;padding:8px 14px;font-size:.85rem;margin:0">← Sommaire (quitter le quiz)</button>
+    </div>
+    <div class="progress"><i id="q-bar" style="width:0%"></i></div>
+    <div style="margin:14px 0 4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <span class="pill" id="q-theme"></span>
+      <span class="pill hidden" id="q-verify"></span>
+    </div>
+    <h2 id="q-enonce" style="color:var(--ink)"></h2>
+    <div id="q-image"></div>
+    <div id="q-body"></div>
+    <div id="q-feedback"></div>
+    <button class="btn primary hidden" id="btn-next" style="margin-top:14px">Question suivante →</button>
+  </section>
+
+  <!-- ÉCRAN RÉSULTATS -->
+  <section id="screen-result" class="card hidden">
+    <div style="text-align:center;margin-bottom:10px">
+      <div class="scorebig" id="r-score"></div>
+      <p class="muted" id="r-sub"></p>
+    </div>
+    <h3>Réussite par thème (cette session)</h3>
+    <div id="r-chart"></div>
+    <div id="r-advice"></div>
+    <div id="r-recap"></div>
+    <button class="btn primary" id="btn-replay" style="margin-top:18px">Rejouer</button>
+    <button class="btn ghost" id="btn-home" style="margin-top:10px">Retour à l'accueil</button>
+  </section>
+
+  <!-- ÉCRAN STATS -->
+  <section id="screen-stats" class="card hidden">
+    <h1>Mes forces &amp; faiblesses</h1>
+    <p class="lead">Cumul de toutes tes sessions, par thème.</p>
+    <div id="s-chart"></div>
+    <div id="s-advice"></div>
+    <button class="btn ghost" id="btn-stats-back" style="margin-top:16px">Retour</button>
+    <button class="btn soft" id="btn-reset" style="margin-top:10px">Réinitialiser mes statistiques</button>
+  </section>
+
+  <!-- ÉCRAN HISTORIQUE -->
+  <section id="screen-hist" class="card hidden">
+    <h1>Historique</h1>
+    <p class="lead">Tes 10 dernières sessions.</p>
+    <ul class="hist" id="h-list"></ul>
+    <button class="btn ghost" id="btn-hist-back" style="margin-top:16px">Retour</button>
+  </section>
+
+  <footer id="app-footer">Réviz' Kinésio · données stockées localement sur ton appareil</footer>
+</div>
+
+<!-- Fenêtre de signalement -->
+<div id="report-modal" class="modal hidden">
+  <div class="box">
+    <h3 style="margin-top:0">Signaler une réponse à vérifier</h3>
+    <p class="muted" style="margin-top:0">Copie ce texte et colle-le dans le groupe WhatsApp : Audrey pourra vérifier et corriger.</p>
+    <textarea id="report-text" readonly></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="report-copy">📋 Copier</button>
+      <button class="btn ghost" id="report-close">Fermer</button>
+    </div>
+    <p class="muted" id="report-status" style="margin-bottom:0"></p>
+  </div>
+</div>
+
+<!-- La banque de questions est chargée depuis questions.js -->
+<script src="questions.js"></script>
+<script>
+"use strict";
+/* ---------- Utilitaires ---------- */
+const $ = s => document.querySelector(s);
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+const screens = ["home","quiz","result","stats","hist"];
+function show(name){ screens.forEach(s=>$("#screen-"+s).classList.toggle("hidden", s!==name)); window.scrollTo(0,0); }
+function colorFor(p){ return p>=80?"var(--green)":p>=60?"var(--blue)":p>=40?"var(--violet)":"var(--red)"; }
+
+/* ---------- Banque ---------- */
+function getBank(){
+  try{ const c=localStorage.getItem("kinesio_bank_custom"); if(c) return JSON.parse(c); }catch(e){}
+  return window.BANQUE_KINESIO;
+}
+let BANK = getBank();
+function themeLabel(t){ return (BANK.meta.themes_labels && BANK.meta.themes_labels[t]) || t; }
+
+/* ---------- Statistiques (locales à l'appareil) ---------- */
+function statsKey(){ return "kinesio_stats"; }
+const STATS_SNAP_KEY = "kinesio_stats_snapshots";
+const STATS_SNAP_MAX = 5;
+
+function loadStats(){
+  try{ return JSON.parse(localStorage.getItem(statsKey())) || {themes:{},sessions:[]}; }
+  catch(e){ return {themes:{},sessions:[]}; }
+}
+function loadStatSnapshots(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(STATS_SNAP_KEY));
+    return Array.isArray(raw) ? raw : [];
+  }catch(e){ return []; }
+}
+function pushStatSnapshot(stats){
+  const snap = { date: new Date().toISOString(), stats: JSON.parse(JSON.stringify(stats)) };
+  const list = loadStatSnapshots().filter(s => s.date !== snap.date);
+  list.unshift(snap);
+  localStorage.setItem(STATS_SNAP_KEY, JSON.stringify(list.slice(0, STATS_SNAP_MAX)));
+}
+function saveStats(s){
+  try{ pushStatSnapshot(loadStats()); }catch(e){}
+  localStorage.setItem(statsKey(), JSON.stringify(s));
+  updateAutobackupUI();
+}
+function restoreLastStatSnapshot(){
+  const list = loadStatSnapshots();
+  if(!list.length) return false;
+  localStorage.setItem(statsKey(), JSON.stringify(JSON.parse(JSON.stringify(list[0].stats))));
+  updateAutobackupUI();
+  return true;
+}
+function formatSnapDate(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString("fr-FR", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+function updateAutobackupUI(){
+  const el = $("#autobackup-info");
+  const btn = $("#btn-restore-autobackup");
+  if(!el || !btn) return;
+  const list = loadStatSnapshots();
+  if(!list.length){
+    el.textContent = "Sauvegarde auto : aucune encore (après ta 1re session).";
+    btn.disabled = true;
+    return;
+  }
+  el.textContent = "Sauvegarde auto : "+list.length+" copie"+(list.length>1?"s":"")+" en local · dernière "+formatSnapDate(list[0].date);
+  btn.disabled = false;
+}
+
+const SHELL_APP_VERSION = document.documentElement.dataset.appVersion || "1.3.2";
+
+function isQuestionVerified(q){
+  if(q.verifie === true) return true;
+  if(q.verifie === false) return false;
+  const bv = q.banque_version || "1.0.0";
+  return bv === "1.0.0";
+}
+
+function qBanqueVersion(q){ return q.banque_version || "1.0.0"; }
+
+function banqueVersionLabel(v){
+  const labels = (BANK.meta && BANK.meta.banque_versions_labels) || {};
+  return labels[v] || ("Banque v"+v);
+}
+
+function metaVersions(){
+  const m = BANK.meta || {};
+  return {
+    app: m.version_app || SHELL_APP_VERSION,
+    banque: m.version_banque || m.version || "?",
+    date: m.date_maj || ""
+  };
+}
+function formatDateMaj(iso){
+  if(!iso) return "";
+  const p = iso.split("-");
+  if(p.length !== 3) return iso;
+  const mois = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+  return p[2]+" "+mois[+p[1]-1]+" "+p[0];
+}
+function versionLabel(){
+  const v = metaVersions();
+  let s = "appli v"+v.app+" · banque v"+v.banque;
+  if(v.date) s += " · "+formatDateMaj(v.date);
+  return s;
+}
+function updateVersionUI(){
+  const v = metaVersions();
+  $("#bank-info").textContent = BANK.questions.length+" questions · "+BANK.themes.length+" thèmes · "+versionLabel();
+  $("#app-footer").textContent = "Réviz' Kinésio · "+versionLabel()+" · données locales sur ton appareil";
+  const warn = $("#version-warn");
+  if(v.app !== SHELL_APP_VERSION){
+    warn.textContent = "⚠️ Fichiers désynchronisés : index.html (v"+SHELL_APP_VERSION+") ≠ questions.js (v"+v.app+"). Remplace les deux fichiers ensemble.";
+    warn.classList.remove("hidden");
+  } else {
+    warn.classList.add("hidden");
+    warn.textContent = "";
+  }
+}
+
+/* ---------- Accueil ---------- */
+function enterApp(){
+  buildBanqueSelect();
+  buildThemeSelect();
+  updateVersionUI();
+  updateAutobackupUI();
+  show("home");
+}
+function buildBanqueSelect(){
+  const sel = $("#sel-banque");
+  const prev = sel.value || "__all__";
+  const counts = {};
+  BANK.questions.forEach(q => {
+    const v = qBanqueVersion(q);
+    counts[v] = (counts[v] || 0) + 1;
+  });
+  const versions = Object.keys(counts).sort();
+  let html = '<option value="__all__">📚 Toutes les versions ('+BANK.questions.length+')</option>';
+  versions.forEach(v => {
+    html += '<option value="'+v+'">v'+v+' — '+banqueVersionLabel(v)+' ('+counts[v]+')</option>';
+  });
+  sel.innerHTML = html;
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+function buildThemeSelect(){
+  const sel = $("#sel-theme");
+  const banque = $("#sel-banque").value;
+  const counts = {};
+  BANK.questions.forEach(q => {
+    if (banque !== "__all__" && qBanqueVersion(q) !== banque) return;
+    counts[q.theme] = (counts[q.theme] || 0) + 1;
+  });
+  const total = Object.values(counts).reduce((a,b)=>a+b, 0);
+  let html = '<option value="__global__">🎲 Tous les thèmes ('+total+')</option>';
+  BANK.themes.forEach(t => {
+    if (counts[t]) html += '<option value="'+t+'">'+themeLabel(t)+' ('+counts[t]+')</option>';
+  });
+  sel.innerHTML = html;
+}
+
+/* ---------- Déroulé du quiz ---------- */
+let quiz = null; // {list, idx, results:[], mode, timerId, timeLeft}
+
+function quizOpts(){
+  return {
+    theme: $("#sel-theme").value,
+    nb: +$("#sel-nb").value,
+    type: $("#sel-type").value,
+    banque: $("#sel-banque").value
+  };
+}
+
+function buildQuiz({theme,nb,type,mode,banque}){
+  let pool = BANK.questions.slice();
+  if(banque && banque!=="__all__") pool = pool.filter(q => qBanqueVersion(q) === banque);
+  if(theme && theme!=="__global__") pool = pool.filter(q=>q.theme===theme);
+  if(type && type!=="all") pool = pool.filter(q=>q.type===type);
+  pool = shuffle(pool);
+  if(mode==="exam"){ pool = pool.slice(0, Math.min(20,pool.length)); }
+  else if(nb>0){ pool = pool.slice(0, Math.min(nb,pool.length)); }
+  if(!pool.length){ alert("Aucune question pour cette sélection."); return null; }
+  return {list:pool, idx:0, results:[], mode, timerId:null, timeLeft:0,
+          theme:(theme==="__global__"?"global":theme)};
+}
+
+function startQuiz(opts){
+  quiz = buildQuiz(opts);
+  if(!quiz) return;
+  $("#q-mode").textContent = quiz.mode==="exam" ? "Examen blanc" : "Quiz";
+  const t = $("#q-timer");
+  if(quiz.mode==="exam"){
+    quiz.timeLeft = 20*60; // 20 minutes
+    t.classList.remove("hidden");
+    tickTimer();
+    quiz.timerId = setInterval(tickTimer, 1000);
+  } else { t.classList.add("hidden"); if(quiz.timerId){ clearInterval(quiz.timerId); quiz.timerId=null; } }
+  show("quiz");
+  renderQuestion();
+}
+
+function quitQuiz(){
+  const exam = quiz && quiz.mode==="exam";
+  const msg = exam
+    ? "Quitter l'examen blanc ? La session en cours ne sera pas enregistrée dans les résultats."
+    : "Revenir au sommaire ? La session en cours ne sera pas enregistrée.";
+  if(!confirm(msg)) return;
+  if(quiz && quiz.timerId) clearInterval(quiz.timerId);
+  quiz = null;
+  enterApp();
+}
+function tickTimer(){
+  const t=$("#q-timer"); const m=(quiz.timeLeft/60|0), s=quiz.timeLeft%60;
+  t.textContent="⏱ "+m+":"+String(s).padStart(2,"0");
+  t.classList.toggle("warn", quiz.timeLeft<=60);
+  if(quiz.timeLeft<=0){ clearInterval(quiz.timerId); finishQuiz(); return; }
+  quiz.timeLeft--;
+}
+
+function renderQuestion(){
+  const q = quiz.list[quiz.idx];
+  const n = quiz.idx+1, total = quiz.list.length;
+  $("#q-counter").textContent = "Question "+n+" / "+total;
+  $("#q-bar").style.width = Math.round((quiz.idx/total)*100)+"%";
+  $("#q-theme").textContent = themeLabel(q.theme);
+  const vEl = $("#q-verify");
+  if(isQuestionVerified(q)){
+    vEl.textContent = "✓ Vérifiée";
+    vEl.className = "pill verify-ok";
+  } else {
+    vEl.textContent = "⚠ Non vérifiée";
+    vEl.className = "pill verify-warn";
+  }
+  $("#q-enonce").textContent = q.enonce;
+  $("#q-image").innerHTML = q.image || "";
+  $("#q-feedback").innerHTML="";
+  $("#btn-next").classList.add("hidden");
+  $("#btn-next").textContent = (n===total) ? "Voir les résultats →" : "Question suivante →";
+  const body = $("#q-body"); body.innerHTML="";
+
+  if(q.type==="qcm"){
+    q.options.forEach((opt,i)=>{
+      const b=document.createElement("button");
+      b.className="opt"; b.innerHTML='<span class="k">'+String.fromCharCode(65+i)+'</span><span>'+opt+'</span>';
+      b.onclick=()=>answerChoice(i);
+      body.appendChild(b);
+    });
+  } else if(q.type==="vrai_faux"){
+    [["Vrai",true],["Faux",false]].forEach(([lab,val],i)=>{
+      const b=document.createElement("button");
+      b.className="opt"; b.innerHTML='<span class="k">'+(i===0?"V":"F")+'</span><span>'+lab+'</span>';
+      b.onclick=()=>answerChoice(val);
+      body.appendChild(b);
+    });
+  } else if(q.type==="association"){
+    const rights = shuffle(q.paires.map(p=>p[1]));
+    const wrap=document.createElement("div");
+    q.paires.forEach((p,i)=>{
+      const row=document.createElement("div"); row.className="assoc-row";
+      const term=document.createElement("div"); term.className="term"; term.textContent=p[0];
+      const sel=document.createElement("select"); sel.dataset.i=i;
+      sel.innerHTML='<option value="">— choisir —</option>'+rights.map(r=>'<option>'+r+'</option>').join("");
+      row.appendChild(term); row.appendChild(sel); wrap.appendChild(row);
+    });
+    const b=document.createElement("button"); b.className="btn primary"; b.style.marginTop="6px";
+    b.textContent="Valider"; b.onclick=answerAssoc;
+    body.appendChild(wrap); body.appendChild(b);
+  }
+}
+
+function lockChoices(){ $("#q-body").querySelectorAll(".opt").forEach(o=>o.disabled=true); }
+
+function answerChoice(val){
+  const q=quiz.list[quiz.idx];
+  const ok=(val===q.bonne_reponse);
+  quiz.results.push({theme:q.theme, ok, q, given:val});
+  if(quiz.mode==="exam"){ nextQuestion(); return; }   // examen : aucun retour, on enchaîne
+  const opts=[...$("#q-body").querySelectorAll(".opt")];
+  lockChoices();
+  if(q.type==="qcm"){
+    opts[q.bonne_reponse].classList.add("good");
+    if(!ok) opts[val].classList.add("bad");
+  } else {
+    const goodIdx=q.bonne_reponse===true?0:1;
+    opts[goodIdx].classList.add("good");
+    if(!ok) opts[goodIdx===0?1:0].classList.add("bad");
+  }
+  showFeedback(q,ok);
+}
+
+function answerAssoc(){
+  const q=quiz.list[quiz.idx];
+  const sels=[...$("#q-body").querySelectorAll("select")];
+  if(sels.some(s=>!s.value)){ alert("Complète toutes les associations."); return; }
+  let ok=true; const given={};
+  sels.forEach(s=>{ const i=+s.dataset.i; given[q.paires[i][0]]=s.value;
+    if(s.value!==q.paires[i][1]) ok=false; });
+  quiz.results.push({theme:q.theme, ok, q, given});
+  if(quiz.mode==="exam"){ nextQuestion(); return; }
+  sels.forEach(s=>{ const i=+s.dataset.i; const good=(s.value===q.paires[i][1]);
+    s.disabled=true; s.style.borderColor=good?"var(--green)":"var(--red)";
+    s.style.background=good?"var(--green-bg)":"var(--red-bg)"; });
+  $("#q-body").querySelector(".btn").disabled=true;
+  showFeedback(q,ok);
+}
+
+function showFeedback(q,ok){
+  const fb=$("#q-feedback");
+  fb.className="feedback "+(ok?"ok":"ko");
+  fb.innerHTML="<strong>"+(ok?"✅ Bonne réponse":"❌ Pas tout à fait")+"</strong><br>"+
+    (q.explication||"")+(q.source?'<span class="src">📚 '+q.source+'</span>':'')+
+    (isQuestionVerified(q)?'':'<span class="src">⚠ Question du lot 2.x — à confirmer sur ta fiche cours si besoin.</span>')+
+    '<br><button class="report-link" onclick="reportCurrent()">⚠️ Signaler cette réponse comme fausse</button>';
+  $("#btn-next").classList.remove("hidden");
+}
+
+function nextQuestion(){
+  quiz.idx++;
+  if(quiz.idx>=quiz.list.length){ finishQuiz(); return; }
+  renderQuestion();
+}
+
+/* ---------- Fin & résultats ---------- */
+function finishQuiz(){
+  if(quiz.timerId) clearInterval(quiz.timerId);
+  const total=quiz.results.length;
+  const good=quiz.results.filter(r=>r.ok).length;
+  const pct = total?Math.round(good/total*100):0;
+
+  // maj stats cumulées
+  const st=loadStats();
+  quiz.results.forEach(r=>{ st.themes[r.theme]=st.themes[r.theme]||{c:0,t:0};
+    st.themes[r.theme].t++; if(r.ok) st.themes[r.theme].c++; });
+  st.sessions.unshift({date:new Date().toISOString(), mode:quiz.mode,
+    theme:quiz.theme, score:good, total});
+  st.sessions=st.sessions.slice(0,30);
+  saveStats(st);
+
+  // affichage
+  $("#r-score").textContent = good+" / "+total;
+  $("#r-sub").textContent = pct+"% de réussite"+(quiz.mode==="exam"?" · examen blanc":"");
+  // graphe par thème (session)
+  const byT={};
+  quiz.results.forEach(r=>{ byT[r.theme]=byT[r.theme]||{c:0,t:0}; byT[r.theme].t++; if(r.ok)byT[r.theme].c++; });
+  $("#r-chart").innerHTML = chartHTML(byT);
+  // conseil
+  const weak=Object.entries(byT).filter(([k,v])=>v.c/v.t<0.6).map(([k])=>themeLabel(k));
+  $("#r-advice").innerHTML = adviceHTML(weak);
+  // récap détaillé (ouvert d'office après un examen blanc)
+  $("#r-recap").innerHTML = recapHTML(quiz.results, quiz.mode==="exam");
+  show("result");
+}
+
+function answerText(q,val){
+  if(q.type==="qcm") return (typeof val==="number" && q.options[val]!=null) ? q.options[val] : "—";
+  if(q.type==="vrai_faux") return val===true?"Vrai":(val===false?"Faux":"—");
+  if(q.type==="association") return q.paires.map(p=>p[0]+" → "+((val&&val[p[0]])||"—")).join("<br>");
+  return "—";
+}
+function correctText(q){
+  if(q.type==="qcm") return q.options[q.bonne_reponse];
+  if(q.type==="vrai_faux") return q.bonne_reponse?"Vrai":"Faux";
+  if(q.type==="association") return q.paires.map(p=>p[0]+" → "+p[1]).join("<br>");
+  return "";
+}
+function buildReport(q,given){
+  return "⚠️ Réviz' Kinésio — réponse à vérifier\n"+
+    "Question "+q.id+" : "+q.enonce+"\n"+
+    "Réponse donnée comme correcte : "+correctText(q).replace(/<br>/g," ; ")+"\n"+
+    "Ma réponse : "+answerText(q,given).replace(/<br>/g," ; ")+"\n"+
+    (q.source?"Source indiquée : "+q.source+"\n":"")+
+    "Remarque : ";
+}
+function openReport(q,given){
+  $("#report-text").value = buildReport(q,given);
+  $("#report-status").textContent="";
+  $("#report-modal").classList.remove("hidden");
+  setTimeout(()=>{ const t=$("#report-text"); t.focus(); t.select(); }, 60);
+}
+function reportCurrent(){
+  const r=quiz.results[quiz.results.length-1];
+  if(r) openReport(r.q, r.given);
+}
+window.reportCurrent = reportCurrent;
+window.reportFromRecap = function(i){ const r=quiz.results[i]; if(r) openReport(r.q, r.given); };
+
+function recapHTML(results, open){
+  if(!results.length) return "";
+  const items=results.map((r,i)=>{
+    const q=r.q, col=r.ok?"var(--green)":"var(--red)";
+    return '<div style="padding:11px 0;border-bottom:1px solid var(--line)">'+
+      '<div style="font-weight:600">'+(i+1)+'. '+q.enonce+'</div>'+
+      '<div class="muted" style="margin-top:4px">'+(r.ok?"✅":"❌")+' Votre réponse : '+
+        '<span style="color:'+col+'">'+answerText(q,r.given)+'</span></div>'+
+      (r.ok?'':'<div class="muted">Bonne réponse : <span style="color:var(--green)">'+correctText(q)+'</span></div>')+
+      (q.explication?'<div class="muted" style="margin-top:2px">'+q.explication+
+        (q.source?' <span style="opacity:.8">— '+q.source+'</span>':'')+'</div>':'')+
+      '<button class="report-link" onclick="reportFromRecap('+i+')">⚠️ Signaler</button>'+
+      '</div>';
+  }).join("");
+  return '<details '+(open?'open':'')+' style="margin-top:16px">'+
+    '<summary style="cursor:pointer;font-weight:700;color:var(--violet-d);padding:6px 0">Voir le détail des réponses</summary>'+
+    '<div style="margin-top:6px">'+items+'</div></details>';
+}
+
+function chartHTML(byT){
+  const entries=Object.entries(byT).sort((a,b)=>(a[1].c/a[1].t)-(b[1].c/b[1].t));
+  if(!entries.length) return '<p class="muted">Pas de données.</p>';
+  return entries.map(([k,v])=>{
+    const p=Math.round(v.c/v.t*100);
+    return '<div class="bar"><span class="lab" title="'+themeLabel(k)+'">'+themeLabel(k)+
+      '</span><span class="track"><span class="fill" style="width:'+p+'%;background:'+colorFor(p)+'"></span></span>'+
+      '<span class="pct" style="color:'+colorFor(p)+'">'+p+'%</span></div>';
+  }).join("");
+}
+function adviceHTML(weak){
+  if(!weak.length) return '<div class="feedback ok" style="margin-top:14px"><strong>Beau travail 🌟</strong><br>Aucun thème sous 60 % ici.</div>';
+  return '<div class="feedback ko" style="margin-top:14px"><strong>À réviser en priorité (&lt; 60 %)</strong><br>'+weak.join(" · ")+'</div>';
+}
+
+/* ---------- Stats cumulées ---------- */
+function openStats(){
+  const st=loadStats();
+  const byT={}; Object.entries(st.themes).forEach(([k,v])=>byT[k]={c:v.c,t:v.t});
+  $("#s-chart").innerHTML = Object.keys(byT).length?chartHTML(byT):'<p class="muted">Fais quelques quiz pour voir apparaître tes statistiques.</p>';
+  const weak=Object.entries(byT).filter(([k,v])=>v.c/v.t<0.6).map(([k])=>themeLabel(k));
+  $("#s-advice").innerHTML = Object.keys(byT).length?adviceHTML(weak):"";
+  show("stats");
+}
+
+/* ---------- Historique ---------- */
+function openHist(){
+  const st=loadStats();
+  const list=$("#h-list");
+  if(!st.sessions.length){ list.innerHTML='<li><span class="muted">Aucune session pour l\'instant.</span></li>'; }
+  else {
+    list.innerHTML = st.sessions.slice(0,10).map(s=>{
+      const d=new Date(s.date), p=s.total?Math.round(s.score/s.total*100):0;
+      const date=d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+      const lab=s.mode==="exam"?"Examen blanc":(s.theme==="global"?"Quiz global":themeLabel(s.theme));
+      return '<li><span>'+date+' · <span class="tag">'+lab+'</span></span><span style="font-weight:700;color:'+colorFor(p)+'">'+s.score+'/'+s.total+'</span></li>';
+    }).join("");
+  }
+  show("hist");
+}
+
+/* ---------- Import / export ---------- */
+function exportBank(){
+  const blob=new Blob([JSON.stringify(BANK,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="questions.json"; a.click(); URL.revokeObjectURL(a.href);
+}
+function importBank(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(!data.questions||!Array.isArray(data.questions)) throw new Error("format");
+      localStorage.setItem("kinesio_bank_custom", JSON.stringify(data));
+      BANK=data; buildBanqueSelect(); buildThemeSelect();
+      updateVersionUI();
+      $("#import-msg").style.color="var(--green)";
+      $("#import-msg").textContent="✅ Banque importée : "+data.questions.length+" questions. Tes scores ne changent pas.";
+    }catch(e){
+      $("#import-msg").style.color="var(--red)";
+      $("#import-msg").textContent="❌ Fichier JSON invalide.";
+    }
+  };
+  r.readAsText(file);
+}
+
+function mergeStatsData(current, imported){
+  const out={themes:{...current.themes}, sessions:[...(current.sessions||[])]};
+  const imp=imported.stats||imported;
+  Object.entries(imp.themes||{}).forEach(([k,v])=>{
+    if(!out.themes[k]) out.themes[k]={c:0,t:0};
+    out.themes[k].c+=(v.c||0); out.themes[k].t+=(v.t||0);
+  });
+  const seen=new Set(out.sessions.map(s=>s.date+"|"+s.score+"|"+s.total+"|"+(s.mode||"")));
+  (imp.sessions||[]).forEach(s=>{
+    const key=s.date+"|"+s.score+"|"+s.total+"|"+(s.mode||"");
+    if(!seen.has(key)){ out.sessions.push(s); seen.add(key); }
+  });
+  out.sessions.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(out.sessions.length>50) out.sessions=out.sessions.slice(0,50);
+  return out;
+}
+function exportScores(){
+  const payload={
+    export_version:1,
+    export_date:new Date().toISOString(),
+    app:"Reviz-Kinesio",
+    version_app:metaVersions().app,
+    version_banque:metaVersions().banque,
+    stats:loadStats()
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  const d=new Date().toISOString().slice(0,10);
+  a.download="reviz-kinesio-scores_"+d+".json"; a.click(); URL.revokeObjectURL(a.href);
+  $("#scores-import-msg").style.color="var(--green)";
+  $("#scores-import-msg").textContent="✅ Scores exportés.";
+}
+function importScores(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      const incoming=data.stats||data;
+      if(!incoming||typeof incoming!=="object"||!Array.isArray(incoming.sessions)) throw new Error("format");
+      const replace=$("#scores-import-replace").checked;
+      const next=replace?incoming:mergeStatsData(loadStats(), data);
+      if(!next.themes) next.themes={};
+      if(!next.sessions) next.sessions=[];
+      saveStats(next);
+      $("#scores-import-msg").style.color="var(--green)";
+      $("#scores-import-msg").textContent=replace
+        ? "✅ Scores remplacés ("+next.sessions.length+" sessions)."
+        : "✅ Scores fusionnés ("+next.sessions.length+" sessions).";
+    }catch(e){
+      $("#scores-import-msg").style.color="var(--red)";
+      $("#scores-import-msg").textContent="❌ Fichier scores invalide.";
+    }
+  };
+  r.readAsText(file);
+}
+
+/* ---------- Câblage ---------- */
+$("#sel-banque").onchange=()=>buildThemeSelect();
+$("#btn-quit-quiz").onclick=quitQuiz;
+$("#btn-start").onclick=()=>startQuiz({...quizOpts(), mode:"quiz"});
+$("#btn-exam").onclick=()=>startQuiz({theme:$("#sel-theme").value, type:"all", banque:$("#sel-banque").value, mode:"exam"});
+$("#btn-next").onclick=nextQuestion;
+$("#btn-replay").onclick=()=>startQuiz({...quizOpts(), mode:"quiz"});
+$("#btn-home").onclick=()=>show("home");
+$("#btn-stats").onclick=openStats;
+$("#btn-stats-back").onclick=()=>show("home");
+$("#btn-hist").onclick=openHist;
+$("#btn-hist-back").onclick=()=>show("home");
+$("#btn-export").onclick=exportBank;
+$("#file-import").onchange=e=>{ if(e.target.files[0]) importBank(e.target.files[0]); };
+$("#btn-export-scores").onclick=exportScores;
+$("#file-import-scores").onchange=e=>{ if(e.target.files[0]) importScores(e.target.files[0]); };
+$("#btn-restore-autobackup").onclick=()=>{
+  if(!loadStatSnapshots().length) return;
+  if(confirm("Restaurer tes scores depuis la dernière sauvegarde auto ? (l'état actuel sera remplacé)")){
+    if(restoreLastStatSnapshot()){
+      $("#scores-import-msg").style.color="var(--green)";
+      $("#scores-import-msg").textContent="✅ Scores restaurés depuis la sauvegarde auto.";
+      updateAutobackupUI();
+    }
+  }
+};
+$("#btn-reset").onclick=()=>{ if(confirm("Effacer toutes les statistiques et l'historique sur cet appareil ?")){ saveStats({themes:{},sessions:[]}); openStats(); } };
+$("#report-close").onclick=()=>$("#report-modal").classList.add("hidden");
+$("#report-copy").onclick=async ()=>{
+  const t=$("#report-text"); t.focus(); t.select();
+  let ok=false;
+  try{ await navigator.clipboard.writeText(t.value); ok=true; }
+  catch(e){ try{ ok=document.execCommand("copy"); }catch(e2){} }
+  $("#report-status").textContent = ok ? "✅ Copié — colle-le dans le groupe WhatsApp." :
+    "Sélectionne le texte ci-dessus puis copie-le (Ctrl+C / Cmd+C).";
+};
+
+/* ---------- Démarrage ---------- */
+(function init(){
+  if(!window.BANQUE_KINESIO){ document.body.innerHTML="<div class='wrap'><div class='card'><h1>Fichier manquant</h1><p>Le fichier <code>questions.js</code> doit être placé à côté de <code>index.html</code>.</p></div></div>"; return; }
+  enterApp();
+})();
+</script>
+</body>
+</html>
